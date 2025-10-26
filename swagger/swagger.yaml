@@ -1,0 +1,343 @@
+openapi: 3.0.3
+info:
+  title: Slapukai BDAR Compliance API
+  description: |
+    API for checking website cookie compliance with BDAR (GDPR) regulations.
+    This API allows you to check if a domain's cookies comply with GDPR requirements.
+  version: 1.0.0
+  contact:
+    name: Tomas Vanagas
+servers:
+  - url: https://slapukai.atakosvektorius.lt
+    description: Production server
+
+tags:
+  - name: Public
+    description: Public endpoints for checking domain compliance
+  - name: Admin
+    description: Admin endpoints for managing cookies database
+  - name: Subscription
+    description: Subscription management endpoints
+
+paths:
+
+
+
+  /api/getresults/{domain}:
+    get:
+      tags:
+        - Public
+      summary: Get BDAR compliance results for a domain
+      description: |
+        Retrieves cookie compliance information for a specified domain.
+        Checks if the domain has been scanned and returns all cookies found
+        with their categories and BDAR compliance status.
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          description: Domain name to check (e.g., example.com)
+          schema:
+            type: string
+            example: "tomotestas.xyz"
+      responses:
+        '200':
+          description: Successful response with domain compliance data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isscanned:
+                    type: integer
+                    description: Whether the domain has been scanned (1=yes, 0=no)
+                    enum: [0, 1]
+                  cookies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        cookiename:
+                          type: string
+                          description: Name of the cookie
+                        category:
+                          type: string
+                          description: Cookie category (or "?" if unknown)
+                        datechecked:
+                          type: string
+                          format: date
+                          description: Date when the domain was last checked
+                        isallowedbdar:
+                          type: integer
+                          description: Whether cookie is allowed under BDAR (1=yes, 0=no)
+                          enum: [0, 1]
+
+
+
+  /api/admin/cookies/push:
+    post:
+      tags:
+        - Admin
+      summary: Push or delete cookies for a domain
+      description: |
+        Admin endpoint to update or delete cookie data for a domain.
+        Requires API key authentication.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - api_key
+                - domain_name
+              properties:
+                action:
+                  type: string
+                  enum: [update, delete]
+                  description: Action to perform (update or delete)
+                api_key:
+                  type: string
+                  description: API key for authentication
+                domain_name:
+                  type: string
+                  description: Domain name to update/delete
+                cookies:
+                  type: array
+                  items:
+                    type: string
+                  description: List of cookie names (required for 'update' action)
+            examples:
+              update:
+                summary: Update cookies for a domain
+                value:
+                  action: "update"
+                  api_key: "your-api-key-here"
+                  domain_name: "tomotestas.xyz"
+                  cookies:
+                    - "tomascookie"
+                    - "tommasspycookie"
+                    - "tomasfunctionalcookie"
+                    - "_ga"
+                    - "_gid"
+              delete:
+                summary: Delete domain and its cookies
+                value:
+                  action: "delete"
+                  api_key: "your-api-key-here"
+                  domain_name: "tomotestas.xyz"
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              examples:
+                update:
+                  summary: Cookies updated
+                  value:
+                    message: "Cookies pushed successfully"
+                delete:
+                  summary: Domain deleted
+                  value:
+                    message: "Domain deleted successfully"
+        '400':
+          description: Bad request - Invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_data:
+                  value:
+                    error: "No data provided"
+                no_api_key:
+                  value:
+                    error: "API key is required"
+                invalid_domain:
+                  value:
+                    error: "Domain name contains forbidden characters"
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Invalid API key"
+        '404':
+          description: Domain not found (for delete action)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Domain not found"
+
+
+
+  /api/admin/cookies/getwork:
+    post:
+      tags:
+        - Admin
+      summary: Get domains that need rescanning
+      description: |
+        Admin endpoint to retrieve a list of domains ordered by oldest scan date.
+        Used by scanner workers to determine which domains need to be rescanned.
+        Requires API key authentication.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - api_key
+              properties:
+                api_key:
+                  type: string
+                  description: API key for authentication
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 10
+                  description: Maximum number of domains to return (1-100)
+            example:
+              api_key: "your-api-key-here"
+              limit: 10
+      responses:
+        '200':
+          description: Successful response with list of domains
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain_name:
+                          type: string
+                          description: Domain name
+                        date_checked:
+                          type: string
+                          format: date
+                          description: Date when domain was last scanned
+              example:
+                domains:
+                  - domain_name: "oldsite.com"
+                    date_checked: "2024-01-15"
+                  - domain_name: "example.com"
+                    date_checked: "2024-02-20"
+        '400':
+          description: Bad request - Invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_data:
+                  value:
+                    error: "No data provided"
+                no_api_key:
+                  value:
+                    error: "API key is required"
+                invalid_limit:
+                  value:
+                    error: "Limit must be an integer between 1 and 100"
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Invalid API key"
+
+
+
+
+  /api/subscribe:
+    post:
+      tags:
+        - Subscription
+      summary: Subscribe to Pro version notifications
+      description: |
+        Allows users to subscribe with their email to receive notifications
+        about the Pro version of the service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email address for subscription
+            example:
+              email: "user@example.com"
+      responses:
+        '200':
+          description: Subscription successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Subscription successful"
+        '400':
+          description: Bad request - Email is required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Email is required"
+
+
+
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for admin endpoints
