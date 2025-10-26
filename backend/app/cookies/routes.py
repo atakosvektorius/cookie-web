@@ -226,21 +226,7 @@ def cookies_getwork():
     Request body:
     {
         "api_key": "abcdef0123456789abcdef0123456789",
-        "limit": 10  // optional, defaults to 10
-    }
-    
-    Response:
-    {
-        "domains": [
-            {
-                "domain_name": "example.com",
-                "date_checked": "2025-01-15"
-            },
-            {
-                "domain_name": "test.com",
-                "date_checked": "2025-01-20"
-            }
-        ]
+        "limit": 10  // optional, defaults to 50
     }
     '''
     
@@ -254,7 +240,6 @@ def cookies_getwork():
     submitted_api_key = data.get('api_key')
     if not submitted_api_key:
         return jsonify({'error': 'API key is required'}), 400
-    
     if submitted_api_key.lower() != os.getenv('API_KEY').lower():
         return jsonify({'error': 'Invalid API key'}), 401
     

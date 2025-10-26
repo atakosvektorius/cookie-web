@@ -21,7 +21,6 @@ services:
     environment:
       - SWAGGER_JSON=/swagger.yaml
       - BASE_URL=/swagger
-      - TRY_IT_OUT_ENABLED=true
     networks:
       - isolated
     restart: unless-stopped
