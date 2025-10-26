@@ -94,7 +94,7 @@ def results_HTTPGET(domain):
 
 @bp_cookies.route('/api/admin/cookies/push', methods=['POST'])
 def cookies_push():
-    f'''
+    '''
     Push cookies to the database
     {
         "action": "update",
@@ -136,7 +136,7 @@ def cookies_push():
     if not submitted_domain_name:
         return jsonify({'error': 'Domain name is required'}), 400
     submitted_domain_name = submitted_domain_name.lower()
-    for forbidenChar in [' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '|', '\'', '"', ':', ';', '<', '>', ',', '.', '?', '/', '\\', '`', '~', ' ']:
+    for forbidenChar in [' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '|', '\'', '"', ':', ';', '<', '>', ',', '?', '/', '\\', '`', '~']:
         if forbidenChar in submitted_domain_name:
             return jsonify({'error': 'Domain name contains forbidden characters'}), 400
 
@@ -211,3 +211,83 @@ def cookies_push():
     else:
         return jsonify({'error': 'Invalid submit action'}), 400
 
+
+
+
+
+
+
+
+
+@bp_cookies.route('/api/admin/cookies/getwork', methods=['POST'])
+def cookies_getwork():
+    '''
+    Get work for the scanner worker - returns oldest domains that need rescanning
+    Request body:
+    {
+        "api_key": "abcdef0123456789abcdef0123456789",
+        "limit": 10  // optional, defaults to 10
+    }
+    
+    Response:
+    {
+        "domains": [
+            {
+                "domain_name": "example.com",
+                "date_checked": "2025-01-15"
+            },
+            {
+                "domain_name": "test.com",
+                "date_checked": "2025-01-20"
+            }
+        ]
+    }
+    '''
+    
+    # POST request data
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+
+    # STEP1: VALIDATE: Check if the API key is valid
+    submitted_api_key = data.get('api_key')
+    if not submitted_api_key:
+        return jsonify({'error': 'API key is required'}), 400
+    
+    if submitted_api_key.lower() != os.getenv('API_KEY').lower():
+        return jsonify({'error': 'Invalid API key'}), 401
+    
+
+    # STEP2: Get limit parameter (default to 50)
+    limit = data.get('limit', 50)
+    if not isinstance(limit, int) or limit < 1 or limit > 100:
+        return jsonify({'error': 'Limit must be an integer between 1 and 100'}), 400
+    
+
+    # STEP3: Query database for oldest domains
+    with get_db_connection() as conn:
+        result = conn.execute('''
+            SELECT 
+                json_object(
+                    'domains', json_group_array(
+                        json_object(
+                            'domain_name', DomainName,
+                            'date_checked', DateChecked
+                        )
+                    )
+                )
+            FROM (
+                SELECT 
+                    DomainName,
+                    DateChecked
+                FROM 
+                    SCANS_DomainNames
+                ORDER BY 
+                    DateChecked ASC
+                LIMIT ?
+            )
+        ''', [limit]).fetchone()
+        
+        return Response(json.dumps(json.loads(result[0]), indent=4), mimetype='application/json')
+        
