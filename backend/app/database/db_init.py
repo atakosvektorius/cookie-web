@@ -54,6 +54,12 @@ def init_db_tables():
                 PRIMARY KEY("ID" AUTOINCREMENT)
             );
         ''')
+        conn.execute('''
+            CREATE TABLE "SCANS_DeletedDomainNames" (
+                "DomainName"	TEXT NOT NULL UNIQUE,
+                "DateDeleted"	TEXT NOT NULL
+            );
+        ''')
         #####################################################################
 
 
