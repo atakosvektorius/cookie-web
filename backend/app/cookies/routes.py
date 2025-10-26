@@ -67,7 +67,7 @@ def results_HTTPGET(domain):
             SELECT
                 json_object(
                                 
-                    'isscanned',    IIF( (SELECT COUNT(GetWebsiteCookies.CookieName) FROM GetWebsiteCookies) > 0,
+                    'isscanned',    IIF( EXISTS(SELECT 1 FROM SCANS_DomainNames WHERE DomainName = ?),
                         1,
                         0           
                     ),
@@ -84,7 +84,7 @@ def results_HTTPGET(domain):
                 )
             FROM 
                 GetCookiesJoinedWithOpenCookie
-        ''', [domain])
+        ''', [domain, domain])
         return Response(json.dumps(json.loads(sqlFetchData.fetchone()[0]), indent=4), mimetype='application/json')
     
 
@@ -154,8 +154,10 @@ def cookies_push():
     if submit_action == 'update':
         # Validate cookies list
         submitted_cookies = data.get('cookies')
-        if not submitted_cookies or not isinstance(submitted_cookies, list):
-            return jsonify({'error': 'Cookies list is required and must be an array'}), 400
+        if submitted_cookies is None:
+            submitted_cookies = []
+        elif not isinstance(submitted_cookies, list):
+            return jsonify({'error': 'Cookies must be an array'}), 400
         
         with get_db_connection() as conn:
             dateNow = datetime.now().strftime("%Y-%m-%d")
