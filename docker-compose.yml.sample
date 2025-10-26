@@ -14,7 +14,7 @@ services:
 
   slapukai-swagger:
     container_name: slapukai-swagger
-    image: swaggerapi/swagger-ui:latest
+    image: swaggerapi/swagger-ui:v5.29.5
     read_only: false
     volumes:
       - ./swagger/swagger.yaml:/swagger.yaml:ro
