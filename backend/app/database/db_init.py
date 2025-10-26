@@ -55,7 +55,7 @@ def init_db_tables():
             );
         ''')
         conn.execute('''
-            CREATE TABLE "SCANS_DeletedDomainNames" (
+            CREATE TABLE IF NOT EXISTS "SCANS_DeletedDomainNames" (
                 "DomainName"	TEXT NOT NULL UNIQUE,
                 "DateDeleted"	TEXT NOT NULL
             );
