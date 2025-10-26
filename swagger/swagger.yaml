@@ -219,11 +219,11 @@ paths:
                   type: integer
                   minimum: 1
                   maximum: 100
-                  default: 10
+                  default: 50
                   description: Maximum number of domains to return (1-100)
             example:
               api_key: "your-api-key-here"
-              limit: 10
+              limit: 50
       responses:
         '200':
           description: Successful response with list of domains
@@ -250,6 +250,98 @@ paths:
                     date_checked: "2024-01-15"
                   - domain_name: "example.com"
                     date_checked: "2024-02-20"
+        '400':
+          description: Bad request - Invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_data:
+                  value:
+                    error: "No data provided"
+                no_api_key:
+                  value:
+                    error: "API key is required"
+                invalid_limit:
+                  value:
+                    error: "Limit must be an integer between 1 and 100"
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Invalid API key"
+
+
+
+
+  /api/admin/deletedcookies/getwork:
+    post:
+      tags:
+        - Admin
+      summary: Get deleted domains that need rescanning
+      description: |
+        Admin endpoint to retrieve a list of deleted domains ordered by oldest scan date.
+        Used by scanner workers to check if previously deleted domains should be rescanned.
+        Requires API key authentication.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - api_key
+              properties:
+                api_key:
+                  type: string
+                  description: API key for authentication
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 50
+                  description: Maximum number of domains to return (1-100, defaults to 50)
+            example:
+              api_key: "your-api-key-here"
+              limit: 50
+      responses:
+        '200':
+          description: Successful response with list of deleted domains
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain_name:
+                          type: string
+                          description: Deleted domain name
+                        date_checked:
+                          type: string
+                          format: date
+                          description: Date when domain was last checked as deleted
+              example:
+                domains:
+                  - domain_name: "olddeleted.com"
+                    date_checked: "2024-01-10"
+                  - domain_name: "removed.com"
+                    date_checked: "2024-02-15"
         '400':
           description: Bad request - Invalid or missing parameters
           content:

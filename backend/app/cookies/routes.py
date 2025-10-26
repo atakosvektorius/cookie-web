@@ -152,7 +152,7 @@ def cookies_push():
 
     # STEP4: Push to the database
     if submit_action == 'update':
-        # Validate cookies list
+        # Step 1: Validate cookies list
         submitted_cookies = data.get('cookies')
         if submitted_cookies is None:
             submitted_cookies = []
@@ -162,25 +162,25 @@ def cookies_push():
         with get_db_connection() as conn:
             dateNow = datetime.now().strftime("%Y-%m-%d")
             
-            # Insert or update the domain in SCANS_DomainNames
+            # Step 2: Insert or update the domain in SCANS_DomainNames
             conn.execute('''
-                INSERT INTO SCANS_DomainNames (DomainName, DateChecked) 
-                VALUES (?, ?)
+                INSERT INTO SCANS_DomainNames (DomainName, DateChecked) VALUES (?, ?)
                 ON CONFLICT(DomainName) DO UPDATE SET DateChecked = ?
             ''', [submitted_domain_name, dateNow, dateNow])
+
+            # Step 3: Delete from SCANS_DeletedDomainNames if it exists
+            conn.execute(' DELETE FROM SCANS_DeletedDomainNames WHERE DomainName = ? ', [submitted_domain_name])
             
-            # Get the domain ID
+            # Step 4: Get the domain ID
             domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', 
                 [submitted_domain_name]
             ).fetchone()
             domain_id = domain_id_result[0]
             
-            # Delete all previous cookies for this domain
-            conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', 
-                [domain_id]
-            )
+            # Step 5: Delete all previous cookies for this domain
+            conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', [domain_id])
             
-            # Insert new cookies
+            # Step 6: Insert new cookies
             for cookie_name in submitted_cookies:
                 if cookie_name:  # Skip empty cookie names
                     conn.execute(' INSERT OR IGNORE INTO SCANS_Cookies (DomainNameID, CookieName) VALUES (?, ?) ', 
@@ -194,20 +194,20 @@ def cookies_push():
     elif submit_action == 'delete':
         with get_db_connection() as conn:
             # Get the domain ID first
-            domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', 
-                [submitted_domain_name]
-            ).fetchone()
+            domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', [submitted_domain_name]).fetchone()
             
             if domain_id_result:
                 domain_id = domain_id_result[0]
-                # Delete cookies first (foreign key relationship)
+                # Delete cookies and the domain
                 conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', [domain_id])
-                # Then delete the domain
                 conn.execute(' DELETE FROM SCANS_DomainNames WHERE ID = ? ', [domain_id])
+                
+                dateNow = datetime.now().strftime("%Y-%m-%d")
+                conn.execute(' INSERT OR REPLACE INTO SCANS_DeletedDomainNames (DomainName, DateDeleted) VALUES (?, ?) ', [submitted_domain_name, dateNow])
+                
                 conn.commit()
-                return jsonify({'message': 'Domain deleted successfully'}), 200
-            else:
-                return jsonify({'message': 'Domain not found'}), 404
+
+            return jsonify({'message': 'Domain deleted successfully'}), 200
 
 
     else:
@@ -272,6 +272,66 @@ def cookies_getwork():
                     SCANS_DomainNames
                 ORDER BY 
                     DateChecked ASC
+                LIMIT ?
+            )
+        ''', [limit]).fetchone()
+        
+        return Response(json.dumps(json.loads(result[0]), indent=4), mimetype='application/json')
+        
+
+
+
+@bp_cookies.route('/api/admin/deletedcookies/getwork', methods=['POST'])
+def deletedcookies_getwork():
+    '''
+    Get work for the scanner worker - returns oldest domains that were deleted
+    Request body:
+    {
+        "api_key": "abcdef0123456789abcdef0123456789",
+        "limit": 10  // optional, defaults to 50
+    }
+    '''
+    
+    # POST request data
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+
+    # STEP1: VALIDATE: Check if the API key is valid
+    submitted_api_key = data.get('api_key')
+    if not submitted_api_key:
+        return jsonify({'error': 'API key is required'}), 400
+    if submitted_api_key.lower() != os.getenv('API_KEY').lower():
+        return jsonify({'error': 'Invalid API key'}), 401
+    
+
+    # STEP2: Get limit parameter (default to 50)
+    limit = data.get('limit', 50)
+    if not isinstance(limit, int) or limit < 1 or limit > 100:
+        return jsonify({'error': 'Limit must be an integer between 1 and 100'}), 400
+    
+
+    # STEP3: Query database for oldest domains that were deleted
+    with get_db_connection() as conn:
+        result = conn.execute('''
+            SELECT 
+                json_object(
+                    'domains', json_group_array(
+                        json_object(
+                            'domain_name', DomainName,
+                            'date_checked', DateDeleted
+                        )
+                    )
+                )
+            FROM (
+                SELECT 
+                    DomainName,
+                    DateDeleted
+                FROM 
+                    SCANS_DeletedDomainNames
+                ORDER BY 
+                    DateDeleted ASC
                 LIMIT ?
             )
         ''', [limit]).fetchone()
