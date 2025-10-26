@@ -159,7 +159,7 @@ const GDPRChecker = () => {
   const getResults = (website) => {
     async function getData(sanitizedWebsite) {
       try {
-        const response = await axios.get("https://slapukai.atakosvektorius.lt/api/getresults/" + sanitizedWebsite);
+        const response = await axios.get("/api/getresults/" + sanitizedWebsite);
         console.log(response.data);
         setCookieData(response.data);
         setLoadingData(false);

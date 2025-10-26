@@ -7,7 +7,7 @@ draft: false
 subscribe_enabled: true
 subscribe_text: "Jei norite sužinoti pirmieji kada Pro versija taps prieinama, mes galime jums pranešti:"
 subscribe_input_form: "El. paštas"
-subscribe_post_url: "https://slapukai.atakosvektorius.lt/api/subscribe"
+subscribe_post_url: "/api/subscribe"
 ---
 
 ***Problematika -*** 
