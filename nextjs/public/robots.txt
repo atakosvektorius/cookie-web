@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://slapukai.atakosvektorius.lt
+
+# Sitemaps
+Sitemap: https://slapukai.atakosvektorius.lt/sitemap.xml

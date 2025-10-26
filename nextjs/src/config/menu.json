@@ -1,0 +1,26 @@
+{
+  "main": [
+    {
+      "name": "Pradžia",
+      "url": "/#"
+    },
+    {
+      "name": "Tikrinti Slapukus",
+      "url": "/tikrinti"
+    },
+    {
+      "name": "Pro",
+      "url": "/pro"
+    },
+    {
+      "name": "Apie Mus",
+      "url": "/apie"
+    }
+  ],
+  "footer": [
+    {
+      "name": "Privatumo Politika",
+      "url": "/privatumo-politika"
+    }
+  ]
+}

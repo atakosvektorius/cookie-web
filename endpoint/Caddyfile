@@ -1,0 +1,27 @@
+:80 {
+
+    # SECURITY: Restricts the app in the browser from communicating with external sources
+    header Content-Security-Policy "
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        font-src 'self' data:;
+        connect-src 'self';
+        frame-ancestors 'self';
+        frame-src 'self';
+        child-src 'self';
+        form-action 'self';
+        worker-src 'self' blob:;
+        base-uri 'self';
+        block-all-mixed-content;
+    "
+
+
+    # Backend
+    reverse_proxy /api/* slapukai-backend:8000
+
+
+    # NextJS
+    reverse_proxy /* slapukai-nextjs:3000
+}

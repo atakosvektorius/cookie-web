@@ -1,0 +1,48 @@
+{
+  "site": {
+    "title": "Atakos Vektorius - Slapukai",
+    "base_url": "https://slapukai.atakosvektorius.lt",
+    "base_path": "/#",
+    "trailing_slash": false,
+    "favicon": "/images/favicon.png",
+    "logo": "/images/av/icononly_transparent.png",
+    "logo_darkmode": "/images/av/icononly_transparent.png",
+    "logo_width": "50",
+    "logo_height": "40",
+    "logo_text": "Aplankyti",
+    "logo_url": "https://atakosvektorius.lt"
+  },
+
+  "settings": {
+    "search": false,
+    "sticky_header": true,
+    "theme_switcher": false,
+    "default_theme": "dark",
+    "pagination": 2,
+    "summary_length": 200,
+    "blog_folder": "blog"
+  },
+
+  "params": {
+    "contact_form_action": "#",
+    "copyright": " © Atakos Vektorius, XXXX"
+  },
+
+  "navigation_button": {
+    "enable": false,
+    "label": "Apsilankyti Atakos Vektoriuje",
+    "link": "https://atakosvektorius.lt"
+  },
+
+  "disqus": {
+    "enable": false,
+    "shortname": "themefisher-template",
+    "settings": {}
+  },
+
+  "metadata": {
+    "meta_author": "Atakos Vektorius",
+    "meta_image": "/images/av/onlylogo.png",
+    "meta_description": "Atakos Vektoriaus BDAR slapukų atitikimo įrankis"
+  }
+}

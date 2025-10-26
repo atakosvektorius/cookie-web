@@ -1,0 +1,40 @@
+services:
+
+  slapukai-endpoint:
+    container_name: slapukai-endpoint
+    image: caddy:2-alpine
+    read_only: true
+    ports:
+      - 80:80
+    volumes:
+      - ./endpoint/Caddyfile:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+
+
+
+  slapukai-nextjs:
+    container_name: slapukai-nextjs
+    image: slapukai-nextjs
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile.prod
+    read_only: true
+    restart: unless-stopped
+
+
+
+  slapukai-backend:
+    container_name: slapukai-backend
+    image: slapukai-backend
+    build: ./backend
+    read_only: true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./backend:/app:ro
+      - ./_DATA:/data
+    environment:
+      - APP_DEBUG=false
+      - API_KEY=abcdef0123456789abcdef0123456789
+    restart: unless-stopped
+
+    

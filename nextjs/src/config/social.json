@@ -1,0 +1,19 @@
+{
+  "main": [
+    {
+      "name": "github",
+      "icon": "FaGithub",
+      "link": "https://github.com/atakosvektorius/"
+    },
+    {
+      "name": "linkedin",
+      "icon": "FaLinkedin",
+      "link": "https://www.linkedin.com/company/87190311/"
+    },
+    {
+      "name": "email",
+      "icon": "FaEnvelope",
+      "link": "mailto:saugu@atakosvektorius.lt"
+    }
+  ]
+}
