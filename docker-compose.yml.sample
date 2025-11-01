@@ -21,8 +21,6 @@ services:
     environment:
       - SWAGGER_JSON=/swagger.yaml
       - BASE_URL=/swagger
-    networks:
-      - isolated
     restart: unless-stopped
 
 
@@ -34,6 +32,8 @@ services:
       context: ./nextjs
       dockerfile: Dockerfile.prod
     read_only: true
+    tmpfs:
+      - /app/.next/cache
     restart: unless-stopped
 
 
