@@ -73,6 +73,34 @@ paths:
                           enum: [0, 1]
 
 
+  /api/getcheckeddistribution:
+    get:
+      tags:
+        - Public
+      summary: Get distribution of domain checks by date
+      description: |
+        Retrieves the count of domains checked per date.
+        Returns a JSON object where keys are dates and values are the number of domains checked on that date.
+        Dates are ordered from most recent to oldest.
+      responses:
+        '200':
+          description: Successful response with domain check distribution
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                description: Object where keys are dates (YYYY-MM-DD) and values are domain counts
+              example:
+                "2025-10-31": 3051
+                "2025-10-30": 25
+                "2025-10-29": 142
+                "2025-10-28": 89
+
+
+
+
 
   /api/admin/cookies/push:
     post:
@@ -191,7 +219,6 @@ paths:
                 message: "Domain not found"
 
 
-
   /api/admin/cookies/getwork:
     post:
       tags:
@@ -282,8 +309,6 @@ paths:
                 error: "Invalid API key"
 
 
-
-
   /api/admin/deletedcookies/getwork:
     post:
       tags:
@@ -372,6 +397,7 @@ paths:
                     type: string
               example:
                 error: "Invalid API key"
+
 
 
 

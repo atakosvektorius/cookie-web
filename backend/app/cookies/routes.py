@@ -89,6 +89,30 @@ def results_HTTPGET(domain):
     
 
 
+@bp_cookies.route('/api/getcheckeddistribution', methods=['GET'])
+def getcheckeddistribution():
+    '''
+    Get checked distribution for the admin
+    '''
+    with get_db_connection() as conn:
+        sqlFetchData = conn.execute('''
+            SELECT 
+                json_group_object(DateChecked, domain_count)
+            FROM (
+                SELECT 
+                    DateChecked,
+                    COUNT(*) as domain_count
+                FROM 
+                    SCANS_DomainNames
+                GROUP BY 
+                    DateChecked
+                ORDER BY 
+                    DateChecked DESC
+            )
+        ''')
+        jsonResult = json.loads(sqlFetchData.fetchone()[0])
+        return Response(json.dumps(jsonResult, indent=4), mimetype='application/json')
+
 
 
 
@@ -247,12 +271,12 @@ def cookies_getwork():
     
 
     # STEP2: Get limit parameter (default to 50)
-    limit = data.get('limit', 50)
+    limit = int(data.get('limit', 50))
     if not isinstance(limit, int) or limit < 1 or limit > 100:
         return jsonify({'error': 'Limit must be an integer between 1 and 100'}), 400
     
 
-    # STEP3: Query database for oldest domains
+    # STEP3: Query database for oldest domains (randomized from top 500 oldest)
     with get_db_connection() as conn:
         result = conn.execute('''
             SELECT 
@@ -268,10 +292,17 @@ def cookies_getwork():
                 SELECT 
                     DomainName,
                     DateChecked
-                FROM 
-                    SCANS_DomainNames
-                ORDER BY 
-                    DateChecked ASC
+                FROM (
+                    SELECT 
+                        DomainName,
+                        DateChecked
+                    FROM 
+                        SCANS_DomainNames
+                    ORDER BY 
+                        DateChecked ASC
+                    LIMIT 500
+                )
+                ORDER BY RANDOM()
                 LIMIT ?
             )
         ''', [limit]).fetchone()
@@ -307,12 +338,12 @@ def deletedcookies_getwork():
     
 
     # STEP2: Get limit parameter (default to 50)
-    limit = data.get('limit', 50)
-    if not isinstance(limit, int) or limit < 1 or limit > 100:
+    limit = int(data.get('limit', 50))
+    if limit < 1 or limit > 100:
         return jsonify({'error': 'Limit must be an integer between 1 and 100'}), 400
     
 
-    # STEP3: Query database for oldest domains that were deleted
+    # STEP3: Query database for oldest domains that were deleted (randomized from top 500 oldest)
     with get_db_connection() as conn:
         result = conn.execute('''
             SELECT 
@@ -328,10 +359,17 @@ def deletedcookies_getwork():
                 SELECT 
                     DomainName,
                     DateDeleted
-                FROM 
-                    SCANS_DeletedDomainNames
-                ORDER BY 
-                    DateDeleted ASC
+                FROM (
+                    SELECT 
+                        DomainName,
+                        DateDeleted
+                    FROM 
+                        SCANS_DeletedDomainNames
+                    ORDER BY 
+                        DateDeleted ASC
+                    LIMIT 500
+                )
+                ORDER BY RANDOM()
                 LIMIT ?
             )
         ''', [limit]).fetchone()
