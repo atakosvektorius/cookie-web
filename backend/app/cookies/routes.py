@@ -96,19 +96,44 @@ def getcheckeddistribution():
     '''
     with get_db_connection() as conn:
         sqlFetchData = conn.execute('''
-            SELECT 
-                json_group_object(DateChecked, domain_count)
-            FROM (
+            WITH GetDomainsDistribution AS (
                 SELECT 
-                    DateChecked,
-                    COUNT(*) as domain_count
-                FROM 
-                    SCANS_DomainNames
-                GROUP BY 
-                    DateChecked
-                ORDER BY 
-                    DateChecked DESC
+                    json_group_object(DateChecked, domain_count) AS domains_distribution
+                FROM (
+                    SELECT 
+                        DateChecked,
+                        COUNT(*) as domain_count
+                    FROM 
+                        SCANS_DomainNames
+                    GROUP BY 
+                        DateChecked
+                    ORDER BY 
+                        DateChecked DESC
+                )
+            ),
+            GetDeletedDomainsDistribution AS (
+                SELECT 
+                    json_group_object(DateDeleted, domain_count) AS deleted_domains_distribution
+                FROM (
+                    SELECT 
+                        DateDeleted,
+                        COUNT(*) as domain_count
+                    FROM 
+                        SCANS_DeletedDomainNames
+                    GROUP BY 
+                        DateDeleted
+                    ORDER BY 
+                        DateDeleted DESC
+                )
             )
+
+            SELECT 
+                json_object(
+                    'total_domains', (SELECT COUNT(*) FROM SCANS_DomainNames),
+                    'total_deleted_domains', (SELECT COUNT(*) FROM SCANS_DeletedDomainNames),
+                    'domains', (SELECT JSON(domains_distribution) from GetDomainsDistribution),
+                    'deleted_domains', (SELECT JSON(deleted_domains_distribution) from GetDeletedDomainsDistribution)
+                )
         ''')
         jsonResult = json.loads(sqlFetchData.fetchone()[0])
         return Response(json.dumps(jsonResult, indent=4), mimetype='application/json')
@@ -143,26 +168,36 @@ def cookies_push():
     # POST request data
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        ERROR = 'No data provided'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
 
 
     # STEP1: VALIDATE: Check if the API key is valid
     submitted_api_key = data.get('api_key')
     if not submitted_api_key:
-        return jsonify({'error': 'API key is required'}), 400
+        ERROR = 'API key is required'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
     if submitted_api_key.lower() != os.getenv('API_KEY').lower():
-        return jsonify({'error': 'Invalid API key'}), 401
+        ERROR = 'Invalid API key'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 401
     
 
 
     # STEP2: VALIDATE: Validate the domain name
     submitted_domain_name = data.get('domain_name')
     if not submitted_domain_name:
-        return jsonify({'error': 'Domain name is required'}), 400
+        ERROR = 'Domain name is required'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
     submitted_domain_name = submitted_domain_name.lower()
     for forbidenChar in [' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '|', '\'', '"', ':', ';', '<', '>', ',', '?', '/', '\\', '`', '~']:
         if forbidenChar in submitted_domain_name:
-            return jsonify({'error': 'Domain name contains forbidden characters'}), 400
+            ERROR = 'Domain name contains forbidden characters'
+            print(f'ERROR: {ERROR}: {submitted_domain_name}')
+            return jsonify({'error': ERROR}), 400
 
 
 
@@ -181,7 +216,9 @@ def cookies_push():
         if submitted_cookies is None:
             submitted_cookies = []
         elif not isinstance(submitted_cookies, list):
-            return jsonify({'error': 'Cookies must be an array'}), 400
+            ERROR = 'Cookies must be an array'
+            print(f'ERROR: {ERROR}')
+            return jsonify({'error': ERROR}), 400
         
         with get_db_connection() as conn:
             dateNow = datetime.now().strftime("%Y-%m-%d")
@@ -217,28 +254,85 @@ def cookies_push():
 
     elif submit_action == 'delete':
         with get_db_connection() as conn:
+            
             # Get the domain ID first
             domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', [submitted_domain_name]).fetchone()
-            
             if domain_id_result:
                 domain_id = domain_id_result[0]
                 # Delete cookies and the domain
                 conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', [domain_id])
                 conn.execute(' DELETE FROM SCANS_DomainNames WHERE ID = ? ', [domain_id])
                 
-                dateNow = datetime.now().strftime("%Y-%m-%d")
-                conn.execute(' INSERT OR REPLACE INTO SCANS_DeletedDomainNames (DomainName, DateDeleted) VALUES (?, ?) ', [submitted_domain_name, dateNow])
-                
-                conn.commit()
+
+
+            dateNow = datetime.now().strftime("%Y-%m-%d")
+            conn.execute(' INSERT OR IGNORE INTO SCANS_DeletedDomainNames (DomainName, DateDeleted) VALUES (?, ?) ', [submitted_domain_name, dateNow])
+            conn.execute(' UPDATE SCANS_DeletedDomainNames SET DateDeleted = ? WHERE DomainName = ? ', [dateNow, submitted_domain_name])
+
+
+            conn.commit()
 
             return jsonify({'message': 'Domain deleted successfully'}), 200
 
 
     else:
-        return jsonify({'error': 'Invalid submit action'}), 400
+        ERROR = 'Invalid submit action'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
 
 
 
+
+@bp_cookies.route('/api/admin/domains/push', methods=['POST'])
+def domains_push():
+    '''
+    Push domains to the database
+    '''
+
+    # POST request data
+    data = request.get_json()
+    if not data:
+        ERROR = 'No data provided'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
+
+
+    # STEP1: VALIDATE: Check if the API key is valid
+    submitted_api_key = data.get('api_key')
+    if not submitted_api_key:
+        ERROR = 'API key is required'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 400
+    if submitted_api_key.lower() != os.getenv('API_KEY').lower():
+        ERROR = 'Invalid API key'
+        print(f'ERROR: {ERROR}')
+        return jsonify({'error': ERROR}), 401
+    
+
+
+    # STEP2: VALIDATE: Validate the domain name
+    submitted_domain_names = data.get('domains')
+    for submitted_domain_name in submitted_domain_names:
+        submitted_domain_name = submitted_domain_name.lower()
+
+        # STEP2.1: Validate the domain name characters
+        for forbidenChar in [' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '|', '\'', '"', ':', ';', '<', '>', ',', '?', '/', '\\', '`', '~']:
+            if forbidenChar in submitted_domain_name:
+                ERROR = 'Domain name contains forbidden characters'
+                print(f'ERROR: {ERROR}: {submitted_domain_name}')
+                submitted_domain_names.remove(submitted_domain_name)
+                continue
+        
+
+        
+    # STEP3: Push the domains to the database
+    with get_db_connection() as conn:
+        for submitted_domain_name in submitted_domain_names:
+            conn.execute(' INSERT OR IGNORE INTO SCANS_DomainNames (DomainName, DateChecked) VALUES (?, ?) ', [submitted_domain_name, "0000-00-00"])
+        conn.commit()
+
+
+    return jsonify({'message': 'Domains pushed successfully'}), 200
 
 
 

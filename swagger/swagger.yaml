@@ -219,6 +219,96 @@ paths:
                 message: "Domain not found"
 
 
+
+
+  /api/admin/domains/push:
+    post:
+      tags:
+        - Admin
+      summary: Push multiple domains to the database
+      description: |
+        Admin endpoint to batch add multiple domain names to the scanning queue.
+        Domains are added with a default scan date of "0000-00-00" to prioritize them for scanning.
+        Domain names are automatically converted to lowercase and validated for forbidden characters.
+        Requires API key authentication.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - api_key
+                - domains
+              properties:
+                api_key:
+                  type: string
+                  description: API key for authentication
+                domains:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    Array of domain names to add to the scanning queue.
+                    Domain names will be validated and converted to lowercase.
+                    Forbidden characters: space, !, @, #, $, %, ^, &, *, (, ), [, ], {, }, |, ', ", :, ;, <, >, ,, ?, /, \, `, ~
+                  minItems: 1
+            example:
+              api_key: "your-api-key-here"
+              domains:
+                - "example.com"
+                - "test-site.org"
+                - "my-domain.net"
+      responses:
+        '200':
+          description: Domains pushed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Domains pushed successfully"
+        '400':
+          description: Bad request - Invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_data:
+                  value:
+                    error: "No data provided"
+                no_api_key:
+                  value:
+                    error: "API key is required"
+                invalid_domain:
+                  summary: Domain contains forbidden characters
+                  value:
+                    error: "Domain name contains forbidden characters"
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Invalid API key"
+
+
+
+
+
   /api/admin/cookies/getwork:
     post:
       tags:
