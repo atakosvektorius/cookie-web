@@ -41,12 +41,13 @@ def results_HTTPGET(domain):
             WITH GetWebsiteCookies AS (
                 SELECT
                     SC.CookieName,
-                    SD.DateChecked
+                    SD.CookiesScanned
                 FROM
                     SCANS_DomainNames SD
                 INNER JOIN SCANS_Cookies SC ON SD.ID = SC.DomainNameID
                 WHERE
                     SD.DomainName = ?
+                    AND SD.Deleted = 0
             ),
             GetCookiesJoinedWithOpenCookie AS (
                 SELECT
@@ -67,7 +68,7 @@ def results_HTTPGET(domain):
             SELECT
                 json_object(
                                 
-                    'isscanned',    IIF( EXISTS(SELECT 1 FROM SCANS_DomainNames WHERE DomainName = ?),
+                    'isscanned',    IIF( EXISTS(SELECT 1 FROM SCANS_DomainNames WHERE DomainName = ? AND Deleted = 0),
                         1,
                         0           
                     ),
@@ -76,7 +77,7 @@ def results_HTTPGET(domain):
                         json_object(
                             'cookiename',           CookieName,
                             'category',             IFNULL(Category, "?"),
-                            'datechecked',          DateChecked,
+                            'datechecked',          CookiesScanned,
                             'isallowedbdar',        IsAllowedBDAR
                         )
                     )
@@ -98,39 +99,43 @@ def getcheckeddistribution():
         sqlFetchData = conn.execute('''
             WITH GetDomainsDistribution AS (
                 SELECT 
-                    json_group_object(DateChecked, domain_count) AS domains_distribution
+                    json_group_object(CookiesScanned, domain_count) AS domains_distribution
                 FROM (
                     SELECT 
-                        DateChecked,
+                        CookiesScanned,
                         COUNT(*) as domain_count
                     FROM 
                         SCANS_DomainNames
+                    WHERE
+                        Deleted = 0
                     GROUP BY 
-                        DateChecked
+                        CookiesScanned
                     ORDER BY 
-                        DateChecked DESC
+                        CookiesScanned DESC
                 )
             ),
             GetDeletedDomainsDistribution AS (
                 SELECT 
-                    json_group_object(DateDeleted, domain_count) AS deleted_domains_distribution
+                    json_group_object(CookiesScanned, domain_count) AS deleted_domains_distribution
                 FROM (
                     SELECT 
-                        DateDeleted,
+                        CookiesScanned,
                         COUNT(*) as domain_count
                     FROM 
-                        SCANS_DeletedDomainNames
+                        SCANS_DomainNames
+                    WHERE
+                        Deleted = 1
                     GROUP BY 
-                        DateDeleted
+                        CookiesScanned
                     ORDER BY 
-                        DateDeleted DESC
+                        CookiesScanned DESC
                 )
             )
 
             SELECT 
                 json_object(
-                    'total_domains', (SELECT COUNT(*) FROM SCANS_DomainNames),
-                    'total_deleted_domains', (SELECT COUNT(*) FROM SCANS_DeletedDomainNames),
+                    'total_domains', (SELECT COUNT(*) FROM SCANS_DomainNames WHERE Deleted = 0),
+                    'total_deleted_domains', (SELECT COUNT(*) FROM SCANS_DomainNames WHERE Deleted = 1),
                     'domains', (SELECT JSON(domains_distribution) from GetDomainsDistribution),
                     'deleted_domains', (SELECT JSON(deleted_domains_distribution) from GetDeletedDomainsDistribution)
                 )
@@ -224,24 +229,18 @@ def cookies_push():
             dateNow = datetime.now().strftime("%Y-%m-%d")
             
             # Step 2: Insert or update the domain in SCANS_DomainNames
-            conn.execute('''
-                INSERT INTO SCANS_DomainNames (DomainName, DateChecked) VALUES (?, ?)
-                ON CONFLICT(DomainName) DO UPDATE SET DateChecked = ?
-            ''', [submitted_domain_name, dateNow, dateNow])
-
-            # Step 3: Delete from SCANS_DeletedDomainNames if it exists
-            conn.execute(' DELETE FROM SCANS_DeletedDomainNames WHERE DomainName = ? ', [submitted_domain_name])
+            conn.execute(' INSERT OR IGNORE INTO SCANS_DomainNames (DomainName, CookiesScanned, Deleted) VALUES (?, ?, 0) ', [submitted_domain_name, dateNow])
+            conn.execute(' UPDATE SCANS_DomainNames SET CookiesScanned = ? WHERE DomainName = ? ', [dateNow, submitted_domain_name])
+            conn.execute(' UPDATE SCANS_DomainNames SET Deleted = 0 WHERE DomainName = ? ', [submitted_domain_name])
             
-            # Step 4: Get the domain ID
-            domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', 
-                [submitted_domain_name]
-            ).fetchone()
+            # Step 3: Get the domain ID
+            domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', [submitted_domain_name]).fetchone()
             domain_id = domain_id_result[0]
             
-            # Step 5: Delete all previous cookies for this domain
+            # Step 4: Delete all previous cookies for this domain
             conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', [domain_id])
             
-            # Step 6: Insert new cookies
+            # Step 5: Insert new cookies
             for cookie_name in submitted_cookies:
                 if cookie_name:  # Skip empty cookie names
                     conn.execute(' INSERT OR IGNORE INTO SCANS_Cookies (DomainNameID, CookieName) VALUES (?, ?) ', 
@@ -254,21 +253,17 @@ def cookies_push():
 
     elif submit_action == 'delete':
         with get_db_connection() as conn:
+            dateNow = datetime.now().strftime("%Y-%m-%d")
             
             # Get the domain ID first
             domain_id_result = conn.execute(' SELECT ID FROM SCANS_DomainNames WHERE DomainName = ? ', [submitted_domain_name]).fetchone()
             if domain_id_result:
                 domain_id = domain_id_result[0]
+
                 # Delete cookies and the domain
                 conn.execute(' DELETE FROM SCANS_Cookies WHERE DomainNameID = ? ', [domain_id])
-                conn.execute(' DELETE FROM SCANS_DomainNames WHERE ID = ? ', [domain_id])
-                
-
-
-            dateNow = datetime.now().strftime("%Y-%m-%d")
-            conn.execute(' INSERT OR IGNORE INTO SCANS_DeletedDomainNames (DomainName, DateDeleted) VALUES (?, ?) ', [submitted_domain_name, dateNow])
-            conn.execute(' UPDATE SCANS_DeletedDomainNames SET DateDeleted = ? WHERE DomainName = ? ', [dateNow, submitted_domain_name])
-
+                conn.execute(' UPDATE SCANS_DomainNames SET Deleted = 1 WHERE ID = ? ', [domain_id])
+                conn.execute(' UPDATE SCANS_DomainNames SET CookiesScanned = ? WHERE ID = ? ', [dateNow, domain_id])
 
             conn.commit()
 
@@ -286,7 +281,7 @@ def cookies_push():
 @bp_cookies.route('/api/admin/domains/push', methods=['POST'])
 def domains_push():
     '''
-    Push domains to the database
+    Push new domains to the database
     '''
 
     # POST request data
@@ -325,10 +320,10 @@ def domains_push():
         
 
         
-    # STEP3: Push the domains to the database
+    # STEP3: Push new domains to the database
     with get_db_connection() as conn:
         for submitted_domain_name in submitted_domain_names:
-            conn.execute(' INSERT OR IGNORE INTO SCANS_DomainNames (DomainName, DateChecked) VALUES (?, ?) ', [submitted_domain_name, "0000-00-00"])
+            conn.execute(' INSERT OR IGNORE INTO SCANS_DomainNames (DomainName, CookiesScanned, Deleted) VALUES (?, ?, 0) ', [submitted_domain_name, "0000-00-00"])
         conn.commit()
 
 
@@ -378,22 +373,24 @@ def cookies_getwork():
                     'domains', json_group_array(
                         json_object(
                             'domain_name', DomainName,
-                            'date_checked', DateChecked
+                            'date_checked', CookiesScanned
                         )
                     )
                 )
             FROM (
                 SELECT 
                     DomainName,
-                    DateChecked
+                    CookiesScanned
                 FROM (
                     SELECT 
                         DomainName,
-                        DateChecked
+                        CookiesScanned
                     FROM 
                         SCANS_DomainNames
+                    WHERE
+                        Deleted = 0
                     ORDER BY 
-                        DateChecked ASC
+                        CookiesScanned ASC
                     LIMIT 500
                 )
                 ORDER BY RANDOM()
@@ -445,22 +442,24 @@ def deletedcookies_getwork():
                     'domains', json_group_array(
                         json_object(
                             'domain_name', DomainName,
-                            'date_checked', DateDeleted
+                            'cookies_scanned', CookiesScanned
                         )
                     )
                 )
             FROM (
                 SELECT 
                     DomainName,
-                    DateDeleted
+                    CookiesScanned
                 FROM (
                     SELECT 
                         DomainName,
-                        DateDeleted
+                        CookiesScanned
                     FROM 
-                        SCANS_DeletedDomainNames
+                        SCANS_DomainNames
+                    WHERE
+                        Deleted = 1
                     ORDER BY 
-                        DateDeleted ASC
+                        CookiesScanned ASC
                     LIMIT 500
                 )
                 ORDER BY RANDOM()

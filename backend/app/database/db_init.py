@@ -14,7 +14,6 @@ from .db import get_db_connection
 
 def init_db():
     init_db_tables()
-    init_default_data()
 
 
 
@@ -38,6 +37,8 @@ def init_db_tables():
         #####################################################################
 
 
+
+
         ############################ Scans tables ###########################
         conn.execute('''
             CREATE TABLE IF NOT EXISTS "SCANS_Cookies" (
@@ -50,17 +51,14 @@ def init_db_tables():
             CREATE TABLE IF NOT EXISTS "SCANS_DomainNames" (
                 "ID"	INTEGER NOT NULL UNIQUE,
                 "DomainName"	TEXT NOT NULL UNIQUE,
-                "DateChecked"	TEXT NOT NULL,
+                "CookiesScanned"	TEXT NOT NULL,
+                "Deleted"	INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY("ID" AUTOINCREMENT)
             );
         ''')
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS "SCANS_DeletedDomainNames" (
-                "DomainName"	TEXT NOT NULL UNIQUE,
-                "DateDeleted"	TEXT NOT NULL
-            );
-        ''')
         #####################################################################
+
+
 
 
         ############################ Other tables ###########################
@@ -84,8 +82,3 @@ def init_db_tables():
             );
         ''')
         #####################################################################
-
-            
-
-def init_default_data():
-    pass
