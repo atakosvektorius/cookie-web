@@ -308,7 +308,7 @@ def domains_push():
     # STEP2: VALIDATE: Validate the domain name
     submitted_domain_names = data.get('domains')
     for submitted_domain_name in submitted_domain_names:
-        submitted_domain_name = submitted_domain_name.lower()
+        submitted_domain_name = submitted_domain_name
 
         # STEP2.1: Validate the domain name characters
         for forbidenChar in [' ', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '[', ']', '{', '}', '|', '\'', '"', ':', ';', '<', '>', ',', '?', '/', '\\', '`', '~']:
@@ -323,6 +323,7 @@ def domains_push():
     # STEP3: Push new domains to the database
     with get_db_connection() as conn:
         for submitted_domain_name in submitted_domain_names:
+            submitted_domain_name = submitted_domain_name.lower()
             conn.execute(' INSERT OR IGNORE INTO SCANS_DomainNames (DomainName, CookiesScanned, Deleted) VALUES (?, ?, 0) ', [submitted_domain_name, "0000-00-00"])
         conn.commit()
 
