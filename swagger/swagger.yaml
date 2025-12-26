@@ -489,6 +489,82 @@ paths:
                 error: "Invalid API key"
 
 
+  /api/admin/export/{type}:
+    get:
+      tags:
+        - Admin
+      summary: Export domains as a plain text file
+      description: |
+        Admin endpoint to export domain names as a plain text file.
+        Returns one domain per line, sorted alphabetically.
+        Requires API key authentication via query parameter.
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          description: |
+            Type of export to perform:
+            - `domains`: Export all active domains
+            - `deleted`: Export all deleted domains
+          schema:
+            type: string
+            enum: [domains, deleted]
+            example: "domains"
+        - name: api_key
+          in: query
+          required: true
+          description: API key for authentication
+          schema:
+            type: string
+            example: "your-api-key-here"
+      responses:
+        '200':
+          description: Successful response with domain list as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: One domain per line, sorted alphabetically
+              example: |
+                example.com
+                mysite.org
+                test-domain.net
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Attachment filename for download
+              example: 'attachment; filename=domains.txt'
+        '400':
+          description: Bad request - Invalid export type or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                no_api_key:
+                  value:
+                    error: "API key is required"
+                invalid_type:
+                  value:
+                    error: "Unknown export type: invalid. Valid types: domains, deleted"
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              example:
+                error: "Invalid API key"
+
 
 
 

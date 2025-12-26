@@ -29,6 +29,9 @@ if __name__ == '__main__':
     from app.subscription.routes import bp_subscription
     app.register_blueprint(bp_subscription, url_prefix='')
 
+    from app.export.routes import bp_export
+    app.register_blueprint(bp_export, url_prefix='')
+
 
     # Run backend
     app.run(host='0.0.0.0', port=8000, debug=APP_DEBUG)
