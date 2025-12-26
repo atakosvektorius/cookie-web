@@ -18,7 +18,7 @@
 
 
 
-<img src="./_docs/images/checkDomain.png" >
+<img src="./_DOCS/images/checkDomain.png" >
 
 </br>
 
