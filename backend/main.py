@@ -7,6 +7,8 @@
 
 import os
 from flask import Flask
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 
 app = Flask(__name__)
@@ -20,6 +22,10 @@ if __name__ == '__main__':
     # Initialize database
     from app.database.db_init import init_db
     init_db()
+
+
+    # Trust X-Forwarded-For headers from reverse proxy
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
     # Register blueprints

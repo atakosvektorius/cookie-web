@@ -25,7 +25,9 @@
 
 
     # Backend
-    reverse_proxy /api/* slapukai-backend:8000
+    reverse_proxy /api/* slapukai-backend:8000 {
+        header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+    }
 
 
     # NextJS
