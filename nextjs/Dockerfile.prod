@@ -1,4 +1,4 @@
-FROM node:23.11.0-alpine AS base
+FROM node:24.13-alpine AS base
 
 # BUILD ENV VARIABLES
 ARG API_INTERNAL
@@ -72,17 +72,3 @@ EXPOSE 3000
 CMD HOSTNAME="0.0.0.0" node server.js
 # CMD ["sleep", "infinity"]
 
-
-
-
-# FROM node:21.7.3-alpine
-
-# WORKDIR /app
-
-# COPY build_output/standalone /app
-# COPY build_output/static /app/.next/static
-# COPY public /app/public
-
-# ENV PORT 443
-# EXPOSE 443
-# CMD ["node", "server.js"]
