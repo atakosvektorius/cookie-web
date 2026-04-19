@@ -36,8 +36,6 @@ services:
     read_only: true                                                       # Prod
     # volumes:                                                              # Dev
     #   - ./vite/app:/app                                                   # Dev
-    tmpfs:
-      - /tmp
     restart: unless-stopped
 
 
