@@ -48,6 +48,14 @@ def init_db_tables():
             );
         ''')
         conn.execute('''
+            CREATE TABLE IF NOT EXISTS "SCANS_Headers" (
+                "DomainNameID"	INTEGER,
+                "HeaderName"	TEXT NOT NULL,
+                "HeaderValue"	TEXT NOT NULL,
+                UNIQUE("HeaderName","DomainNameID")
+            );
+        ''')
+        conn.execute('''
             CREATE TABLE IF NOT EXISTS "SCANS_DomainNames" (
                 "ID"	INTEGER NOT NULL UNIQUE,
                 "DomainName"	TEXT NOT NULL UNIQUE,

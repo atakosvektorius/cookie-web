@@ -27,16 +27,19 @@ bp_cookies = Blueprint('cookies', __name__)
 @bp_cookies.route('/api/getresults/<string:domain>', methods=['GET'])
 def results_HTTPGET(domain):
     '''
-    Get results for clients that want to check if a website is compliant with BDAR
+    Get results for users that want to check if a website is compliant with BDAR
     '''
     domain = domain.lower()
     with get_db_connection() as conn:
 
+
+        # STEP 1: Log user query
         dateNow = datetime.now().strftime("%Y-%m-%d")
         conn.execute(' INSERT INTO USERS_DomainQueries VALUES (?,?) ', [domain, dateNow])
         conn.commit()
 
 
+        # STEP 2: Get results
         sqlFetchData = conn.execute('''
             WITH GetWebsiteCookies AS (
                 SELECT
@@ -86,8 +89,12 @@ def results_HTTPGET(domain):
             FROM 
                 GetCookiesJoinedWithOpenCookie
         ''', [domain, domain])
+
+        # STEP 3: Return results
         return Response(json.dumps(json.loads(sqlFetchData.fetchone()[0]), indent=4), mimetype='application/json')
     
+
+
 
 
 @bp_cookies.route('/api/getcheckeddistribution', methods=['GET'])
@@ -146,6 +153,8 @@ def getcheckeddistribution():
 
 
 
+
+
 @bp_cookies.route('/api/admin/cookies/push', methods=['POST'])
 def cookies_push():
     '''
@@ -166,7 +175,13 @@ def cookies_push():
             "_ga_0987654321",
             "_ga_1234567890",
             "_ga_9876543210"
-        ]
+        ],
+        "headers": {
+            "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+            "Strict-Transport-Security": "max-age=31536000",
+            "X-Frame-Options": "DENY",
+            "X-Content-Type-Options": "nosniff"
+        }
     }
     '''
 
@@ -216,6 +231,7 @@ def cookies_push():
 
     # STEP4: Push to the database
     if submit_action == 'update':
+
         # Step 1: Validate cookies list
         submitted_cookies = data.get('cookies')
         if submitted_cookies is None:
@@ -225,6 +241,7 @@ def cookies_push():
             print(f'ERROR: {ERROR}')
             return jsonify({'error': ERROR}), 400
         
+
         with get_db_connection() as conn:
             dateNow = datetime.now().strftime("%Y-%m-%d")
             
@@ -246,7 +263,16 @@ def cookies_push():
                     conn.execute(' INSERT OR IGNORE INTO SCANS_Cookies (DomainNameID, CookieName) VALUES (?, ?) ', 
                         [domain_id, cookie_name]
                     )
+
+            # Step 6: Insert headers
+            submitted_headers = data.get('headers')
+            if submitted_headers and isinstance(submitted_headers, dict):
+                for header_name, header_value in submitted_headers.items():
+                    conn.execute(' INSERT OR IGNORE INTO SCANS_Headers (DomainNameID, HeaderName, HeaderValue) VALUES (?, ?, ?) ', 
+                        [domain_id, header_name, header_value]
+                    )
             
+            # Step 7: Commit changes to the database
             conn.commit()
             return jsonify({'message': 'Cookies pushed successfully'}), 200
 
@@ -274,6 +300,9 @@ def cookies_push():
         ERROR = 'Invalid submit action'
         print(f'ERROR: {ERROR}')
         return jsonify({'error': ERROR}), 400
+
+
+
 
 
 

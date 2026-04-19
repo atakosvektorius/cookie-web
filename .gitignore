@@ -1,3 +1,5 @@
 /_DATA/
 /_OLD/
 docker-compose.yml
+.env
+
