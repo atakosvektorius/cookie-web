@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+@layer base {
+  html {
+    @apply text-base;
+  }
+  body {
+    @apply bg-body font-primary font-normal leading-relaxed text-text dark:bg-darkmode-body dark:text-darkmode-text;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-secondary font-bold leading-tight text-dark dark:text-darkmode-dark;
+  }
+  h1, .h1 { @apply text-h1-sm md:text-h1; }
+  h2, .h2 { @apply text-h2-sm md:text-h2; }
+  h3, .h3 { @apply text-h3-sm md:text-h3; }
+  h4, .h4 { @apply text-h4 font-medium; }
+  h5, .h5 { @apply text-h5 font-medium; }
+  h6, .h6 { @apply text-h6 font-medium; }
+  b, strong { @apply font-semibold; }
+  code { @apply after:border-none; }
+}
+
+/* ── Components ── */
+@layer components {
+
+  /* sections */
+  .section    { @apply py-24 xl:py-28; }
+  .section-sm { @apply py-16 xl:py-20; }
+  .section-lg { @apply py-28 xl:py-32; }
+
+  /* container */
+  .container { @apply mx-auto max-w-[1320px] px-4; }
+
+  /* form */
+  .form-input {
+    @apply w-full rounded border-transparent bg-theme-light px-6 py-4 text-dark placeholder:text-light focus:border-primary focus:ring-transparent dark:border-darkmode-border dark:bg-darkmode-theme-light dark:text-darkmode-light;
+  }
+
+  /* social icons */
+  .social-icons { @apply space-x-4; }
+  .social-icons li { @apply inline-block; }
+  .social-icons li a {
+    @apply flex h-9 w-9 items-center justify-center rounded bg-primary text-center leading-9 text-white dark:bg-darkmode-primary dark:text-dark;
+  }
+  .social-icons li a svg { @apply h-5 w-5; }
+
+  /* content / prose */
+  .content {
+    @apply prose max-w-none;
+    @apply prose-headings:mb-[.3em] prose-headings:mt-[.6em];
+    @apply prose-h1:text-h1-sm md:prose-h1:text-h1;
+    @apply prose-h2:text-h2-sm md:prose-h2:text-h2;
+    @apply prose-h3:text-h3-sm md:prose-h3:text-h3;
+    @apply prose-img:max-w-full prose-img:rounded;
+    @apply prose-hr:border-border prose-hr:dark:border-darkmode-border;
+    @apply prose-p:text-base prose-p:text-text prose-p:dark:text-darkmode-text;
+    @apply prose-blockquote:rounded-lg prose-blockquote:border prose-blockquote:border-l-[10px] prose-blockquote:border-primary prose-blockquote:bg-theme-light prose-blockquote:px-8 prose-blockquote:py-10 prose-blockquote:font-secondary prose-blockquote:text-2xl prose-blockquote:not-italic prose-blockquote:text-dark prose-blockquote:dark:border-darkmode-primary prose-blockquote:dark:bg-darkmode-theme-light prose-blockquote:dark:text-darkmode-light;
+    @apply prose-pre:rounded-lg prose-pre:bg-theme-light prose-pre:dark:bg-darkmode-theme-light;
+    @apply prose-code:px-1 prose-code:text-primary prose-code:dark:text-darkmode-primary;
+    @apply prose-strong:text-dark prose-strong:dark:text-darkmode-text;
+    @apply prose-a:text-text prose-a:underline hover:prose-a:text-primary prose-a:dark:text-darkmode-text hover:prose-a:dark:text-darkmode-primary;
+    @apply prose-li:text-text prose-li:dark:text-darkmode-text;
+    @apply prose-table:relative prose-table:overflow-hidden prose-table:rounded-lg prose-table:before:absolute prose-table:before:left-0 prose-table:before:top-0 prose-table:before:h-full prose-table:before:w-full prose-table:before:rounded-[inherit] prose-table:before:border prose-table:before:content-[""] prose-table:before:dark:border-darkmode-border;
+    @apply prose-thead:border-border prose-thead:bg-theme-light prose-thead:dark:border-darkmode-border prose-thead:dark:bg-darkmode-theme-light;
+    @apply prose-th:relative prose-th:z-10 prose-th:px-4 prose-th:py-[18px] prose-th:text-dark prose-th:dark:text-darkmode-text;
+    @apply prose-tr:border-border prose-tr:dark:border-darkmode-border;
+    @apply prose-td:relative prose-td:z-10 prose-td:px-3 prose-td:py-[18px] prose-td:dark:text-darkmode-text;
+  }
+
+  /* ── Navigation ── */
+  input#nav-toggle:checked + label #show-button { @apply hidden; }
+  input#nav-toggle:checked + label #hide-button { @apply block; }
+  input#nav-toggle:checked ~ #nav-menu { @apply block; }
+
+  .navbar       { @apply relative flex flex-wrap items-center justify-between; }
+  .navbar-brand { @apply text-xl font-semibold text-dark dark:text-darkmode-dark; }
+  .navbar-nav   { @apply text-center lg:text-left; }
+  .nav-link     { @apply block p-3 font-semibold text-dark transition hover:text-primary dark:text-darkmode-dark lg:px-2 lg:py-3; }
+  .nav-dropdown { @apply mr-0; }
+  .nav-dropdown-list  { @apply z-10 min-w-[180px] rounded bg-body p-4 shadow dark:bg-darkmode-body; }
+  .nav-dropdown-item  { @apply mb-2; }
+  .nav-dropdown-link  { @apply block py-1 font-semibold text-dark transition hover:text-primary dark:text-darkmode-text dark:hover:text-darkmode-primary; }
+
+  /* theme switcher */
+  .theme-switcher       { @apply inline-flex; }
+  .theme-switcher label { @apply relative inline-block h-4 w-6 cursor-pointer rounded-2xl bg-border lg:w-10; }
+  .theme-switcher input { @apply absolute opacity-0; }
+  .theme-switcher span  { @apply absolute -top-1 left-0 dark:lg:left-4 flex h-6 w-6 items-center justify-center rounded-full bg-dark transition-all duration-300 dark:bg-white; }
+  .theme-switcher input:checked + label span { @apply lg:left-4; }
+
+  /* ── Buttons ── */
+  .btn { @apply inline-block rounded border border-transparent px-5 py-2 font-semibold capitalize transition; }
+  .btn-sm { @apply rounded-[4px] px-4 py-1.5 text-sm; }
+  .btn-primary { @apply border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-white dark:text-dark; }
+  .btn-outline-primary { @apply border-dark bg-transparent text-dark hover:bg-dark hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-dark; }
+}
+
+/* ── Utilities ── */
+@layer utilities {
+  .bg-gradient {
+    @apply bg-gradient-to-b from-[rgba(249,249,249,1)] from-[0.53%] to-white to-[83.28%] dark:from-darkmode-theme-light dark:to-darkmode-body;
+  }
+}
+
+/* hide video on mobile */
+@media (max-width: 768px) {
+  .video-section { display: none; }
+}

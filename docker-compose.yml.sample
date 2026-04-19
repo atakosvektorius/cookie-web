@@ -3,6 +3,7 @@ services:
   slapukai-endpoint:
     container_name: slapukai-endpoint
     image: caddy:2-alpine
+    user: 1000:1000
     read_only: true
     ports:
       - 80:80
@@ -25,15 +26,18 @@ services:
 
 
 
-  slapukai-nextjs:
-    container_name: slapukai-nextjs
-    image: slapukai-nextjs
+  slapukai-vite:
+    container_name: slapukai-vite
+    image: slapukai-vite
     build:
-      context: ./nextjs
-      dockerfile: Dockerfile.prod
-    read_only: true
+      context: ./vite
+      dockerfile: Dockerfile                                              # Prod
+      # dockerfile: Dockerfile.dev                                          # Dev
+    read_only: true                                                       # Prod
+    # volumes:                                                              # Dev
+    #   - ./vite/app:/app                                                   # Dev
     tmpfs:
-      - /app/.next/cache
+      - /tmp
     restart: unless-stopped
 
 

@@ -47,9 +47,10 @@
         }
 
 
-        # NextJS
-        reverse_proxy /* slapukai-nextjs:3000
-
+        # Vite
+        handle {
+            reverse_proxy slapukai-vite:80
+        }
 
     }
 }
