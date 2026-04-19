@@ -35,7 +35,7 @@ services:
       # dockerfile: Dockerfile.dev                                                      # Dev
     read_only: true                                                                   # Prod
     # volumes:                                                                          # Dev
-      # - ./vite/app:/app                                                               # Dev
+    #   - ./vite/app:/app                                                               # Dev
     restart: unless-stopped
 
 
