@@ -31,11 +31,11 @@ services:
     image: slapukai-vite
     build:
       context: ./vite
-      dockerfile: Dockerfile                                              # Prod
-      # dockerfile: Dockerfile.dev                                          # Dev
-    read_only: true                                                       # Prod
-    # volumes:                                                              # Dev
-    #   - ./vite/app:/app                                                   # Dev
+      dockerfile: Dockerfile                                                          # Prod
+      # dockerfile: Dockerfile.dev                                                      # Dev
+    read_only: true                                                                   # Prod
+    # volumes:                                                                          # Dev
+      # - ./vite/app:/app                                                               # Dev
     restart: unless-stopped
 
 
