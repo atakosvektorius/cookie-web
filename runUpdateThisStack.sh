@@ -20,6 +20,22 @@ fi
 
 
 
+################################ BACKEND API KEY AUTOSETUP ##############################
+# Only generate if API_KEY doesn't exist in .env
+if [ ! -f .env ] || ! grep -q "^API_KEY=" .env; then
+    echo "Generating API key..."
+    API_KEY="$(openssl rand -hex 32)"
+
+    # Only add newline if file doesn't end with one
+    [ -f .env ] && [ -n "$(tail -c1 .env 2>/dev/null)" ] && echo "" >> .env
+    echo "API_KEY=$API_KEY" >> .env
+    echo "API key added to .env"
+fi
+#########################################################################################
+
+
+
+
 
 sudo docker-compose down
 sudo docker-compose up -d --build

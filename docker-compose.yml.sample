@@ -44,12 +44,35 @@ services:
     container_name: slapukai-backend
     image: slapukai-backend
     build: ./backend
-    read_only: true
+    read_only: true                                                                   # Prod
     volumes:
-      - ./backend:/app:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./_DATA:/data
+      # - ./backend:/app:ro                                                             # Dev
     environment:
-      - APP_DEBUG=false
-      - API_KEY=abcdef0123456789abcdef0123456789
+      - API_KEY=${API_KEY}
+      # - APP_DEBUG=true                                                                # Dev
+    restart: unless-stopped
+
+
+
+  slapukai-dbgate:
+    container_name: slapukai-dbgate
+    image: dbgate/dbgate:7.1.6
+    user: root
+    read_only: true
+    environment:
+      WEB_ROOT: /dbgate
+
+      LOGIN: admin
+      PASSWORD: ${DBGATE_PASSWORD}
+
+      CONNECTIONS: con1
+      LABEL_con1: Slapukai - Database
+      FILE_con1: /root/db/slapukai.db
+      ENGINE_con1: sqlite@dbgate-plugin-sqlite
+      
+    volumes:
+      - ./_DATA:/root/db
     restart: unless-stopped
 
