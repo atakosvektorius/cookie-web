@@ -267,6 +267,10 @@ def cookies_push():
             # Step 6: Insert headers
             submitted_headers = data.get('headers')
             if submitted_headers and isinstance(submitted_headers, dict):
+                # Delete all previous headers for this domain
+                conn.execute(' DELETE FROM SCANS_Headers WHERE DomainNameID = ? ', [domain_id])
+
+                # Insert new headers
                 for header_name, header_value in submitted_headers.items():
                     conn.execute(' INSERT OR IGNORE INTO SCANS_Headers (DomainNameID, HeaderName, HeaderValue) VALUES (?, ?, ?) ', 
                         [domain_id, header_name, header_value]
