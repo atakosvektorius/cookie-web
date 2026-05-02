@@ -39,5 +39,11 @@ RUN pip install --no-cache-dir                  \
     openpyxl==3.1.5
 
 
+
+# Copy source code
+COPY . .
+
+
+# Run server
 EXPOSE 8000
 CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -182,7 +182,7 @@ class OpenCookieDatabase(models.Model):
     # Table metadata
     class Meta:
         db_table = "webservers_opencookiedatabase"
-        ordering = ["cookie_name"]
+        ordering = []
         verbose_name = "open cookie database entry"
         verbose_name_plural = "open cookie database"
 

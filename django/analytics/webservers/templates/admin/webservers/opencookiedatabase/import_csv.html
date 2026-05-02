@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Import Open Cookie Database from CSV{% endblock %}
+
+{% block content %}
+<h2>Import Open Cookie Database from CSV</h2>
+
+<p>Upload a CSV file with the following columns:</p>
+<code>ID, Platform, Category, Cookie / Data Key name, Domain, Description, Retention period, Data Controller, User Privacy &amp; GDPR Rights Portals, Wildcard match</code>
+
+<br><br>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <p><input type="file" name="csv_file" accept=".csv" required></p>
+    <p>
+        <input type="submit" value="Upload CSV" class="default">
+        <a href="../">Cancel</a>
+    </p>
+</form>
+
+<p><strong>Notes:</strong></p>
+<ul>
+    <li>Existing entries (matched by ID) will be updated.</li>
+    <li>New categories will be created automatically.</li>
+    <li>File must be UTF-8 encoded.</li>
+</ul>
+{% endblock %}

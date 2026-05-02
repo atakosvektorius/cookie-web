@@ -7,9 +7,20 @@
 #
 # Inline models allow editing related records directly
 # from a parent record's admin page.
+#
+# OpenCookieDatabase has a custom CSV import action
+# accessible via the "Import from CSV" button.
 ############################################################
 
+import csv
+import io
+import uuid
+
 from django.contrib import admin
+from django.shortcuts import render, redirect
+from django.urls import path
+from django.contrib import messages
+
 from .models import Domain, Subdomain, CookieCategory, Header, Cookie, OpenCookieDatabase
 
 
@@ -127,8 +138,87 @@ class CookieAdmin(admin.ModelAdmin):
 
 @admin.register(OpenCookieDatabase)
 class OpenCookieDatabaseAdmin(admin.ModelAdmin):
-    list_display = ['cookie_name', 'platform', 'category', 'domain', 'wildcard_match']
-    list_filter = ['wildcard_match', 'category', 'platform']
+    list_display = ['id', 'cookie_name', 'platform', 'category', 'domain', 'description', 'retention_period', 'data_controller', 'wildcard_match']
     search_fields = ['cookie_name', 'platform', 'domain', 'description']
+    ordering = []
+    change_list_template = 'admin/webservers/opencookiedatabase/change_list.html'
+
+    # Custom URLs
+    def get_urls(self):
+        custom_urls = [
+            path('import-csv/', self.admin_site.admin_view(self.import_csv), name='opencookiedatabase_import_csv'),
+        ]
+        return custom_urls + super().get_urls()
+
+
+    # Import CSV action
+    def import_csv(self, request):
+        if request.method == 'POST' and request.FILES.get('csv_file'):
+            csv_file = request.FILES['csv_file']
+
+            try:
+                decoded = csv_file.read().decode('utf-8')
+            except UnicodeDecodeError:
+                messages.error(request, 'File must be UTF-8 encoded CSV.')
+                return redirect('..')
+
+            reader = csv.DictReader(io.StringIO(decoded))
+
+            created = 0
+            updated = 0
+            errors = 0
+
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    row_id = row.get('ID', '').strip()
+                    if not row_id:
+                        continue
+
+                    try:
+                        entry_uuid = uuid.UUID(row_id)
+                    except ValueError:
+                        errors += 1
+                        continue
+
+                    category_name = row.get('Category', '').strip()
+                    category_obj = None
+                    if category_name:
+                        category_obj, _ = CookieCategory.objects.get_or_create(name=category_name)
+
+                    wildcard_raw = row.get('Wildcard match', '0').strip()
+                    wildcard = wildcard_raw in ('1', 'true', 'True', 'yes')
+
+                    defaults = {
+                        'platform': row.get('Platform', '').strip() or None,
+                        'category': category_obj,
+                        'cookie_name': row.get('Cookie / Data Key name', '').strip(),
+                        'domain': row.get('Domain', '').strip() or None,
+                        'description': row.get('Description', '').strip() or None,
+                        'retention_period': row.get('Retention period', '').strip() or None,
+                        'data_controller': row.get('Data Controller', '').strip() or None,
+                        'privacy_rights_portals': row.get('User Privacy & GDPR Rights Portals', '').strip() or None,
+                        'wildcard_match': wildcard,
+                    }
+
+                    _, was_created = OpenCookieDatabase.objects.update_or_create(
+                        id=entry_uuid,
+                        defaults=defaults,
+                    )
+
+                    if was_created:
+                        created += 1
+                    else:
+                        updated += 1
+
+                except Exception as e:
+                    errors += 1
+
+            messages.success(request, f'Import complete: {created} created, {updated} updated, {errors} errors.')
+            return redirect('..')
+
+        return render(request, 'admin/webservers/opencookiedatabase/import_csv.html', {
+            'title': 'Import Open Cookie Database from CSV',
+            'opts': self.model._meta,
+        })
 
 
