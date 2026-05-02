@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p _DATA
+mkdir -p ./_DATA/postgres
 
 
 

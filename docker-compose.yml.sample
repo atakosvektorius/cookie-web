@@ -54,6 +54,56 @@ services:
       # - APP_DEBUG=true                                                                # Dev
     restart: unless-stopped
 
+
+  slapukai-django:
+    container_name: slapukai-django
+    build: ./django
+    image: slapukai-django
+    # user: 1000:1000
+    read_only: true
+    environment:
+      - BASE_URL=https://slapukai.atakosvektorius.lt
+      - DJANGO_DEBUG=True
+      - DJANGO_ADMIN_URL=admin/
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - USE_DOCKER=yes
+
+      # Database credentials
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_NAME=analytics
+      - DB_HOST=slapukai-postgres
+      - DB_PORT=5432
+    volumes:
+      # Timezone
+      - /etc/localtime:/etc/localtime:ro
+
+      # Source code
+      - ./django:/app                                                                 # Dev
+    restart: unless-stopped
+
+
+  slapukai-postgres:
+    container_name: slapukai-postgres
+    image: postgres:18-alpine
+    # user: 1000:1000
+    read_only: true
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      PGDATA: /var/lib/postgresql/data
+    tmpfs:
+      - /var/run/postgresql:uid=1000,gid=1000
+    volumes:
+      # Timezone
+      - /etc/localtime:/etc/localtime:ro
+
+      # Persistent data
+      - ./_DATA/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+
   # ------------------------------------------------------------
   # ------------------------------------------------------------
   # ------------------------------------------------------------
