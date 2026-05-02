@@ -40,6 +40,7 @@
             reverse_proxy slapukai-swagger:8080
         }
 
+
         # DBGate Endpoint
         redir /dbgate /dbgate/
         handle /dbgate/* {
@@ -47,9 +48,20 @@
         }
 
 
+        # Django
+        redir /django /django/
+        handle /django/* {
+            reverse_proxy slapukai-django:8000 {
+                header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+            }
+        }
+
+
         # Backend
-        reverse_proxy /api/* slapukai-backend:8000 {
-            header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+        handle /api/* {
+            reverse_proxy slapukai-backend:8000 {
+                header_up X-Forwarded-For {http.request.header.X-Forwarded-For}
+            }
         }
 
 
