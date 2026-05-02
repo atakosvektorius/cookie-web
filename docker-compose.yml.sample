@@ -1,5 +1,8 @@
 services:
 
+  # ------------------------------------------------------------
+  #              Incoming/outgoing traffic endpoints
+  # ------------------------------------------------------------
   slapukai-endpoint:
     container_name: slapukai-endpoint
     image: caddy:2-alpine
@@ -11,21 +14,19 @@ services:
       - ./endpoint/Caddyfile:/etc/caddy/Caddyfile:ro
     restart: unless-stopped
 
-
-
-  slapukai-swagger:
-    container_name: slapukai-swagger
-    image: swaggerapi/swagger-ui:v5.29.5
-    read_only: false
-    volumes:
-      - ./swagger/swagger.yaml:/swagger.yaml:ro
-    environment:
-      - SWAGGER_JSON=/swagger.yaml
-      - BASE_URL=/swagger
-    restart: unless-stopped
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
 
 
 
+
+
+
+
+  # ------------------------------------------------------------
+  #                   AV System services
+  # ------------------------------------------------------------
   slapukai-vite:
     container_name: slapukai-vite
     image: slapukai-vite
@@ -37,7 +38,6 @@ services:
     # volumes:                                                                          # Dev
     #   - ./vite/app:/app                                                               # Dev
     restart: unless-stopped
-
 
 
   slapukai-backend:
@@ -54,8 +54,20 @@ services:
       # - APP_DEBUG=true                                                                # Dev
     restart: unless-stopped
 
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
 
 
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #                   Helper admin services
+  # ------------------------------------------------------------
   slapukai-dbgate:
     container_name: slapukai-dbgate
     image: dbgate/dbgate:7.1.6
@@ -75,4 +87,35 @@ services:
     volumes:
       - ./_DATA:/root/db
     restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+  # ------------------------------------------------------------
+  #                   Documentation services
+  # ------------------------------------------------------------
+  slapukai-swagger:
+    container_name: slapukai-swagger
+    image: swaggerapi/swagger-ui:v5.29.5
+    read_only: false
+    volumes:
+      - ./swagger/swagger.yaml:/swagger.yaml:ro
+    environment:
+      - SWAGGER_JSON=/swagger.yaml
+      - BASE_URL=/swagger
+    restart: unless-stopped
+
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+  # ------------------------------------------------------------
+
 
