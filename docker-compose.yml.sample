@@ -29,14 +29,20 @@ services:
   # ------------------------------------------------------------
   slapukai-vite:
     container_name: slapukai-vite
+  
+    # Self-built
     image: slapukai-vite
     build:
       context: ./vite
-      dockerfile: Dockerfile                                                          # Prod
-      # dockerfile: Dockerfile.dev                                                      # Dev
-    read_only: true                                                                   # Prod
-    # volumes:                                                                          # Dev
-    #   - ./vite/app:/app                                                               # Dev
+      dockerfile: Dockerfile                                                         # Prod
+      # dockerfile: Dockerfile.dev                                                     # Dev
+
+    user: 1000:1000
+    read_only: true
+    # tmpfs:                                                                           # Dev
+    #   - /home/node/.npm:uid=1000,gid=1000                                            # Dev
+    # volumes:                                                                         # Dev
+    #   - ./vite/app:/app                                                              # Dev
     restart: unless-stopped
 
 

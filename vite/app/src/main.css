@@ -1,111 +1,85 @@
+/*  [*] main.css — Tailwind entry, fonts and element defaults
+
+    Imported once, by main.jsx, and run through PostCSS
+    (tailwindcss v3, then autoprefixer). Everything else the site
+    looks like is Tailwind classes on the components themselves —
+    the shared button / input strings live in utils/uiClasses.js,
+    the prose recipe in components/Content.jsx. This file declares
+    the two self-hosted fonts and sets what an element is before
+    any class touches it.
+
+    No token is declared here: text-base, the text-h* sizes, the
+    fonts and the colours come from tailwind.config.js, which
+    derives them from src/config/theme.json — one dark palette
+    (body black, surface grey, text grey, headings white). */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Base ── */
+/* Fonts — served from public/fonts on this origin (the endpoint's
+   CSP allows font-src 'self' only). Both are variable fonts split
+   into a latin and a latin-ext file; Lithuanian letters (ą, č, ę,
+   ė, į, š, ų, ū, ž) live in latin-ext, so both files load on every
+   page. index.html preloads the two latin files. */
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/heebo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Heebo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/heebo-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Signika';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/signika-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Signika';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/signika-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Base — element defaults, always emitted. `text-base` on html is
+   not Tailwind's 1rem/1.5 pair: tailwind.config.js redefines it
+   as theme.json font_size.base (16px), the rem basis every
+   heading size below hangs off. */
 @layer base {
   html {
     @apply text-base;
   }
   body {
-    @apply bg-body font-primary font-normal leading-relaxed text-text dark:bg-darkmode-body dark:text-darkmode-text;
+    @apply bg-body font-primary font-normal leading-relaxed text-text;
   }
+  /* Headings switch to Signika; the sizes come from
+     tailwind.config.js (h6 = 1 rem, each step × theme.json
+     font_size.scale 1.25), the -sm sizes are 0.8× below md, and
+     h4–h6 use the 500 face instead of 700. */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-secondary font-bold leading-tight text-dark dark:text-darkmode-dark;
+    @apply font-secondary font-bold leading-tight text-heading;
   }
-  h1, .h1 { @apply text-h1-sm md:text-h1; }
-  h2, .h2 { @apply text-h2-sm md:text-h2; }
-  h3, .h3 { @apply text-h3-sm md:text-h3; }
-  h4, .h4 { @apply text-h4 font-medium; }
-  h5, .h5 { @apply text-h5 font-medium; }
-  h6, .h6 { @apply text-h6 font-medium; }
+  h1 { @apply text-h1-sm md:text-h1; }
+  h2 { @apply text-h2-sm md:text-h2; }
+  h3 { @apply text-h3-sm md:text-h3; }
+  h4 { @apply text-h4 font-medium; }
+  h5 { @apply text-h5 font-medium; }
+  h6 { @apply text-h6 font-medium; }
+  /* 600 is the heaviest Heebo weight index.html loads — bold
+     (700) would be faux-bold */
   b, strong { @apply font-semibold; }
-  code { @apply after:border-none; }
-}
-
-/* ── Components ── */
-@layer components {
-
-  /* sections */
-  .section    { @apply py-24 xl:py-28; }
-  .section-sm { @apply py-16 xl:py-20; }
-  .section-lg { @apply py-28 xl:py-32; }
-
-  /* container */
-  .container { @apply mx-auto max-w-[1320px] px-4; }
-
-  /* form */
-  .form-input {
-    @apply w-full rounded border-transparent bg-theme-light px-6 py-4 text-dark placeholder:text-light focus:border-primary focus:ring-transparent dark:border-darkmode-border dark:bg-darkmode-theme-light dark:text-darkmode-light;
-  }
-
-  /* social icons */
-  .social-icons { @apply space-x-4; }
-  .social-icons li { @apply inline-block; }
-  .social-icons li a {
-    @apply flex h-9 w-9 items-center justify-center rounded bg-primary text-center leading-9 text-white dark:bg-darkmode-primary dark:text-dark;
-  }
-  .social-icons li a svg { @apply h-5 w-5; }
-
-  /* content / prose */
-  .content {
-    @apply prose max-w-none;
-    @apply prose-headings:mb-[.3em] prose-headings:mt-[.6em];
-    @apply prose-h1:text-h1-sm md:prose-h1:text-h1;
-    @apply prose-h2:text-h2-sm md:prose-h2:text-h2;
-    @apply prose-h3:text-h3-sm md:prose-h3:text-h3;
-    @apply prose-img:max-w-full prose-img:rounded;
-    @apply prose-hr:border-border prose-hr:dark:border-darkmode-border;
-    @apply prose-p:text-base prose-p:text-text prose-p:dark:text-darkmode-text;
-    @apply prose-blockquote:rounded-lg prose-blockquote:border prose-blockquote:border-l-[10px] prose-blockquote:border-primary prose-blockquote:bg-theme-light prose-blockquote:px-8 prose-blockquote:py-10 prose-blockquote:font-secondary prose-blockquote:text-2xl prose-blockquote:not-italic prose-blockquote:text-dark prose-blockquote:dark:border-darkmode-primary prose-blockquote:dark:bg-darkmode-theme-light prose-blockquote:dark:text-darkmode-light;
-    @apply prose-pre:rounded-lg prose-pre:bg-theme-light prose-pre:dark:bg-darkmode-theme-light;
-    @apply prose-code:px-1 prose-code:text-primary prose-code:dark:text-darkmode-primary;
-    @apply prose-strong:text-dark prose-strong:dark:text-darkmode-text;
-    @apply prose-a:text-text prose-a:underline hover:prose-a:text-primary prose-a:dark:text-darkmode-text hover:prose-a:dark:text-darkmode-primary;
-    @apply prose-li:text-text prose-li:dark:text-darkmode-text;
-    @apply prose-table:relative prose-table:overflow-hidden prose-table:rounded-lg prose-table:before:absolute prose-table:before:left-0 prose-table:before:top-0 prose-table:before:h-full prose-table:before:w-full prose-table:before:rounded-[inherit] prose-table:before:border prose-table:before:content-[""] prose-table:before:dark:border-darkmode-border;
-    @apply prose-thead:border-border prose-thead:bg-theme-light prose-thead:dark:border-darkmode-border prose-thead:dark:bg-darkmode-theme-light;
-    @apply prose-th:relative prose-th:z-10 prose-th:px-4 prose-th:py-[18px] prose-th:text-dark prose-th:dark:text-darkmode-text;
-    @apply prose-tr:border-border prose-tr:dark:border-darkmode-border;
-    @apply prose-td:relative prose-td:z-10 prose-td:px-3 prose-td:py-[18px] prose-td:dark:text-darkmode-text;
-  }
-
-  /* ── Navigation ── */
-  input#nav-toggle:checked + label #show-button { @apply hidden; }
-  input#nav-toggle:checked + label #hide-button { @apply block; }
-  input#nav-toggle:checked ~ #nav-menu { @apply block; }
-
-  .navbar       { @apply relative flex flex-wrap items-center justify-between; }
-  .navbar-brand { @apply text-xl font-semibold text-dark dark:text-darkmode-dark; }
-  .navbar-nav   { @apply text-center lg:text-left; }
-  .nav-link     { @apply block p-3 font-semibold text-dark transition hover:text-primary dark:text-darkmode-dark lg:px-2 lg:py-3; }
-  .nav-dropdown { @apply mr-0; }
-  .nav-dropdown-list  { @apply z-10 min-w-[180px] rounded bg-body p-4 shadow dark:bg-darkmode-body; }
-  .nav-dropdown-item  { @apply mb-2; }
-  .nav-dropdown-link  { @apply block py-1 font-semibold text-dark transition hover:text-primary dark:text-darkmode-text dark:hover:text-darkmode-primary; }
-
-  /* theme switcher */
-  .theme-switcher       { @apply inline-flex; }
-  .theme-switcher label { @apply relative inline-block h-4 w-6 cursor-pointer rounded-2xl bg-border lg:w-10; }
-  .theme-switcher input { @apply absolute opacity-0; }
-  .theme-switcher span  { @apply absolute -top-1 left-0 dark:lg:left-4 flex h-6 w-6 items-center justify-center rounded-full bg-dark transition-all duration-300 dark:bg-white; }
-  .theme-switcher input:checked + label span { @apply lg:left-4; }
-
-  /* ── Buttons ── */
-  .btn { @apply inline-block rounded border border-transparent px-5 py-2 font-semibold capitalize transition; }
-  .btn-sm { @apply rounded-[4px] px-4 py-1.5 text-sm; }
-  .btn-primary { @apply border-primary bg-primary text-white dark:border-darkmode-primary dark:bg-white dark:text-dark; }
-  .btn-outline-primary { @apply border-dark bg-transparent text-dark hover:bg-dark hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-dark; }
-}
-
-/* ── Utilities ── */
-@layer utilities {
-  .bg-gradient {
-    @apply bg-gradient-to-b from-[rgba(249,249,249,1)] from-[0.53%] to-white to-[83.28%] dark:from-darkmode-theme-light dark:to-darkmode-body;
-  }
-}
-
-/* hide video on mobile */
-@media (max-width: 768px) {
-  .video-section { display: none; }
 }

@@ -1,4 +1,24 @@
+# Global options: no config autosave (the container root is
+# read-only) and no admin API (nothing manages caddy at run time)
+{
+    persist_config off
+    admin off
+}
+
 :80 {
+    encode zstd gzip
+
+    # Hashed build output — a new build gets new names, so the
+    # old ones may be cached forever; a missing chunk is a 404,
+    # never index.html
+    handle /assets/* {
+        root * /app/dist
+        header Cache-Control "public, max-age=31536000, immutable"
+        file_server
+    }
+
+    # Everything else: static files, and index.html for any
+    # route the SPA owns
     handle {
         root * /app/dist
         try_files {path} /index.html

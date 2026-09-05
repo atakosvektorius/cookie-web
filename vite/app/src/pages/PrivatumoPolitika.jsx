@@ -1,19 +1,66 @@
+// -----------------------------------------------------------
+//  [*] PrivatumoPolitika — the privacy policy text page
+//
+//  Static Lithuanian prose under the PageHeader title band:
+//  five short <h4> sections (who we are, no personal data
+//  collected, what the checker does, data protection, policy
+//  changes), the effective date and a contact e-mail. Nothing
+//  fetches and nothing is interactive — the whole page is
+//  markup inside <Content> (the Tailwind-typography wrapper),
+//  so the headings and paragraphs carry no classes of their
+//  own.
+//
+//  The tab reads "BDAR Vektorius - Privatumo Politika"
+//  (SeoMeta); PageHeader shows "Privatumo Politika" with a
+//  "Pradžia / Privatumo Politika" breadcrumb derived from the
+//  URL.
+// -----------------------------------------------------------
+
 import SeoMeta from '@/components/SeoMeta';
 import PageHeader from '@/components/PageHeader';
+import Content from '@/components/Content';
 
-const PrivatumoPolitika = () => {
+
+
+
+
+
+
+// -----------------------------------------------------------
+// PrivatumoPolitika (default export)
+// -----------------------------------------------------------
+//
+// Used by:
+//   - App.jsx — route "/privatumo-politika"
+// -----------------------------------------------------------
+
+export default function PrivatumoPolitika() {
   return (
     <>
+
+      {/* Head tags */}
       <SeoMeta
-        title="Privatumo Politika"
-        meta_title="BDAR Vektorius - Privatumo Politika"
+        title="BDAR Vektorius - Privatumo Politika"
         description="Sužinokite apie mūsų įsipareigojimą užtikrinti jūsų privatumą naudojant 'BDAR Vektorius' įrankį."
       />
+
+      {/* Title band with the breadcrumb trail */}
       <PageHeader title="Privatumo Politika" />
+
+      {/* Reading column — py-24 xl:py-28 is the band's
+          vertical padding; lg:col-10 = 10/12 width from lg
+          up */}
       <div className="flex justify-center">
-        <section className="section lg:col-10 xl:col-10">
-          <div className="container">
-            <div className="content">
+
+        <section className="py-24 xl:py-28 lg:col-10">
+
+          <div className="mx-auto max-w-[1320px] px-4">
+
+            {/* The policy itself — Content is the Tailwind
+                typography wrapper, which is where the h4/p
+                spacing and colours come from */}
+            <Content>
+
               <h4>Privatumo Politika</h4>
               <p>
                 MB "Atakos Vektorius" yra įsipareigojęs užtikrinti savo klientų privatumą. Mūsų
@@ -51,18 +98,24 @@ const PrivatumoPolitika = () => {
                 jūsų privatumą.
               </p>
 
+              {/* Effective date and contact are hardcoded
+                  prose — the e-mail is plain text, not a
+                  mailto: link */}
               <p>Įsigaliojimo data: 2023-11-03</p>
 
               <p>
                 Jei turite klausimų ar pastabų apie mūsų privatumo politiką, prašome susisiekti su
                 mumis: saugu@atakosvektorius.lt
               </p>
-            </div>
+
+            </Content>
+
           </div>
+
         </section>
+
       </div>
+
     </>
   );
-};
-
-export default PrivatumoPolitika;
+}

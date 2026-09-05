@@ -1,13 +1,14 @@
-FROM node:24-slim AS builder
+FROM node:24.2.0-alpine AS builder
 
 WORKDIR /app
 
-# Copy application source code
-COPY app /app
+# Dependencies first, from the lockfile — this layer is reused
+# while only the source changes
+COPY app/package.json app/package-lock.json ./
+RUN npm ci
 
-
-# Install dependencies and build
-RUN npm install
+# Application source code and the production build
+COPY app .
 RUN npm run build
 
 

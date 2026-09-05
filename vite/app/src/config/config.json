@@ -2,9 +2,7 @@
   "site": {
     "title": "Atakos Vektorius - Slapukai",
     "base_url": "https://slapukai.atakosvektorius.lt",
-    "favicon": "/images/favicon.png",
     "logo": "/images/av/icononly_transparent.png",
-    "logo_darkmode": "/images/av/icononly_transparent.png",
     "logo_width": "50",
     "logo_height": "40",
     "logo_text": "Aplankyti",
@@ -12,10 +10,7 @@
   },
 
   "settings": {
-    "search": false,
-    "sticky_header": true,
-    "theme_switcher": false,
-    "default_theme": "dark"
+    "sticky_header": true
   },
 
   "params": {

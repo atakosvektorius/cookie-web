@@ -1,20 +1,69 @@
+// -----------------------------------------------------------
+//  [*] Pro — the "Pro version" pitch page
+//
+//  Static Lithuanian prose at route "/pro". First the
+//  problem: of ~200,000 Lithuanian legal entities about
+//  50,000 run a website, and a crawl of those found roughly
+//  half setting cookies without the consent BDAR requires.
+//  Then the pitch for a paid company-profiling tool aimed at
+//  lawyers and BDAR consultants, with the four criteria it
+//  would search by. The product does not exist yet, so the
+//  page ends in SubscribeForm, which collects e-mails through
+//  POST /api/subscribe.
+//
+//  Same skeleton as PrivatumoPolitika: SeoMeta (head tags
+//  only, renders nothing), PageHeader (the gradient title
+//  card: h1 + breadcrumbs), then the prose inside <Content>,
+//  the Tailwind-typography wrapper Apie uses too (Apie
+//  otherwise differs: no PageHeader, its own <h2>, the
+//  shorter py-16 band). Width comes from the bootstrap-grid
+//  plugin (`lg:col-10`), vertical padding from py-24.
+// -----------------------------------------------------------
+
 import SeoMeta from '@/components/SeoMeta';
 import PageHeader from '@/components/PageHeader';
+import Content from '@/components/Content';
 import SubscribeForm from '@/components/SubscribeForm';
 
-const Pro = () => {
+
+
+
+
+
+
+// -----------------------------------------------------------
+// Pro (default export)
+// -----------------------------------------------------------
+//
+// Used by:
+//   - App.jsx — route "/pro"
+// -----------------------------------------------------------
+
+export default function Pro() {
   return (
     <>
+
+      {/* Head tags only — <title> and og:title read
+          "Atakos Vektorius - Pro" */}
       <SeoMeta
-        title="Profesionalus BDAR Atitikties Įrankis"
-        meta_title="Atakos Vektorius - Pro"
+        title="Atakos Vektorius - Pro"
         description="Mūsų produktas, remiantis pažangiausiomis duomenų analitikos technologijomis, užtikrina, kad teisininkai ir kiti specialistai galėtų efektyviai nustatyti ir tvarkyti BDAR atitikties klausimus."
       />
+
+      {/* The visible h1 and the breadcrumb trail */}
       <PageHeader title="Profesionalus BDAR Atitikties Įrankis" />
+
       <div className="flex justify-center">
-        <section className="section lg:col-10 xl:col-10">
-          <div className="container">
-            <div className="content">
+        <section className="py-24 xl:py-28 lg:col-10">
+          <div className="mx-auto max-w-[1320px] px-4">
+
+            {/* The prose. Content is Tailwind typography,
+                which already spaces paragraphs — the bare
+                <br />s between blocks add one more line of
+                air on top */}
+            <Content>
+
+              {/* The problem — the crawl figures */}
               <p>
                 <strong><em>Problematika –</em></strong>
               </p>
@@ -31,6 +80,8 @@ const Pro = () => {
                 jo įgyvendinimo.
               </p>
               <br />
+
+              {/* The pitch — who the tool is for */}
               <h5>Apie įrankį:</h5>
               <p>
                 Mes pristatome inovatyvų įrankį, skirtą teisininkams bei BDAR konsultacijų ir
@@ -47,6 +98,9 @@ const Pro = () => {
                 įrankis leidžia vykdyti išsamią paiešką pagal šiuos kriterijus:
               </p>
               <br />
+
+              {/* The four search criteria the tool would
+                  offer */}
               <ul>
                 <li>
                   Įmonių veiklos pobūdis: Analizuojama, kaip įmonės veikla susijusi su asmens
@@ -66,17 +120,23 @@ const Pro = () => {
                 </li>
               </ul>
               <br />
-            </div>
+
+            </Content>
+
+            {/* No product yet — collect e-mails instead. The
+                form POSTs {"email"} to /api/subscribe: 200
+                {"message"} (INSERT OR IGNORE, so a repeated
+                address succeeds too) or 400 {"error"} */}
             <SubscribeForm
               subscribe_text="Jei norite sužinoti pirmieji kada Pro versija taps prieinama, mes galime jums pranešti:"
               subscribe_input_form="El. paštas"
               subscribe_post_url="/api/subscribe"
             />
+
           </div>
         </section>
       </div>
+
     </>
   );
-};
-
-export default Pro;
+}
